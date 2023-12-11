@@ -10,7 +10,7 @@ var mongooseMajorVersion = +mongoose.version[0]; // 4, 5, 6...
 
 console.log(`> mongoose: ${mongooseMajorVersion}`);
 
-if (mongooseMajorVersion < 7) {
+if (mongooseMajorVersion < 9) {
     mongoose.set('strictQuery', true);
 }
 
@@ -46,7 +46,7 @@ chai.use(function (_chai, utils) {
 });
 
 before(async function () {
-    await mongoose.connect(process.env.MONGOOSE_TEST_URI || 'mongodb://localhost/test', {useNewUrlParser: true, useUnifiedTopology: true});
+    await mongoose.connect(process.env.MONGOOSE_TEST_URI || 'mongodb://localhost/test');
 });
 
 after(async function () {
@@ -568,15 +568,6 @@ describe("check not overridden static methods", function () {
         await mongoose.connection.db.dropCollection("mongoose_delete_test");
     });
 
-    it("count() -> should return 3 documents", async function () {
-        try {
-            const count = await TestModel.count();
-            count.should.equal(3);
-        } catch (err) {
-            should.not.exist(err);
-        }
-    });
-
     it("countDocuments() -> should return 3 documents", async function () {
         try {
             const count = await TestModel.countDocuments();
@@ -1009,18 +1000,6 @@ describe("check the existence of override static methods: { overrideMethods: tru
     TestSchema.plugin(mongoose_delete, {overrideMethods: true});
     var TestModel = mongoose.model('Test6', TestSchema);
 
-    it("count() -> method should exist", function () {
-        expect(TestModel.count).to.exist;
-    });
-
-    it("countDeleted() -> method should exist", function () {
-        expect(TestModel.countDeleted).to.exist;
-    });
-
-    it("countWithDeleted() -> method should exist", function () {
-        expect(TestModel.countWithDeleted).to.exist;
-    });
-
     it("countDocuments() -> method should exist", function () {
         expect(TestModel.countDocuments).to.exist;
     });
@@ -1106,27 +1085,15 @@ describe("check the existence of override static methods: { overrideMethods: tru
     });
 });
 
-describe("check the existence of override static methods: { overrideMethods: ['testError', 'count', 'countDocuments', 'find', 'findOne', 'findOneAndUpdate', 'update', 'updateOne', 'updateMany'] }", function () {
+describe("check the existence of override static methods: { overrideMethods: ['testError', 'countDocuments', 'find', 'findOne', 'findOneAndUpdate', 'update', 'updateOne', 'updateMany'] }", function () {
     var TestSchema = new Schema({name: String}, {collection: 'mongoose_delete_test'});
-    TestSchema.plugin(mongoose_delete, {overrideMethods: ['testError', 'count', 'countDocuments', 'find', 'findOne', 'findOneAndUpdate', 'update', 'updateOne', 'updateMany']});
+    TestSchema.plugin(mongoose_delete, {overrideMethods: ['testError', 'countDocuments', 'find', 'findOne', 'findOneAndUpdate', 'update', 'updateOne', 'updateMany']});
     var TestModel = mongoose.model('Test7', TestSchema);
 
     it("testError() -> method should not exist", function () {
         expect(TestModel.testError).to.not.exist;
     });
 
-    it("count() -> method should exist", function () {
-        expect(TestModel.count).to.exist;
-    });
-
-    it("countDeleted() -> method should exist", function () {
-        expect(TestModel.countDeleted).to.exist;
-    });
-
-    it("countWithDeleted() -> method should exist", function () {
-        expect(TestModel.countWithDeleted).to.exist;
-    });
-
     it("countDocuments() -> method should exist", function () {
         expect(TestModel.countDocuments).to.exist;
     });
@@ -1212,25 +1179,13 @@ describe("check the existence of override static methods: { overrideMethods: ['t
     });
 });
 
-describe("check the existence of override static methods: { overrideMethods: ['count', 'countDocuments', 'find'] }", function () {
+describe("check the existence of override static methods: { overrideMethods: ['countDocuments', 'find'] }", function () {
     var TestSchema = new Schema({name: String}, {collection: 'mongoose_delete_test'});
-    TestSchema.plugin(mongoose_delete, {overrideMethods: ['count', 'countDocuments', 'find']});
+    TestSchema.plugin(mongoose_delete, {overrideMethods: ['countDocuments', 'find']});
     var TestModel = mongoose.model('Test8', TestSchema);
 
     it("testError() -> method should not exist", function () {
         expect(TestModel.testError).to.not.exist;
-    });
-
-    it("count() -> method should exist", function () {
-        expect(TestModel.count).to.exist;
-    });
-
-    it("countDeleted() -> method should exist", function () {
-        expect(TestModel.countDeleted).to.exist;
-    });
-
-    it("countWithDeleted() -> method should exist", function () {
-        expect(TestModel.countWithDeleted).to.exist;
     });
 
     it("countDocuments() -> method should exist", function () {
