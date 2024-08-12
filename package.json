@@ -29,9 +29,9 @@
     "mongoose": "8.x"
   },
   "devDependencies": {
-    "chai": "^4.3.10",
-    "mocha": "^10.2.0",
-    "mongoose": "^8.0.3",
+    "chai": "^4.5.0",
+    "mocha": "^10.7.3",
+    "mongoose": "^8.5.2",
     "nyc": "^15.1.0"
   }
 }
