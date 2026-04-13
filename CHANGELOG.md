@@ -1,3 +1,34 @@
+## [v1.0.7]
+> December 16, 2025
+- next() function is not available for pre middlewares in mongoose 9 ([abnud11](https://github.com/abnud11)) [#171](https://github.com/dsanel/mongoose-delete/pull/171)
+- upgrade github actions versions from ([abnud11](https://github.com/abnud11)) [#172](https://github.com/dsanel/mongoose-delete/pull/172)
+
+## [v1.0.6]
+> November 6, 2025
+- Improve aggregate implementation's performance ([mareksuscak](https://github.com/mareksuscak)) [#158](https://github.com/dsanel/mongoose-delete/pull/158)
+
+## [v1.0.5]
+> November 6, 2025
+- fix: Set deleted to false instead of unsetting when calling `restore()` ([vkarpov15](https://github.com/vkarpov15)) [#150](https://github.com/dsanel/mongoose-delete/pull/150)
+
+## [v1.0.4]
+> November 5, 2025
+- Add option to popylate with { onlyDeleted: true } ([davidsierradz](https://github.com/davidsierradz)) [#169](https://github.com/dsanel/mongoose-delete/pull/169)
+- Add distinct method to the list of supported methods ([DevooKim](https://github.com/DevooKim)) [#149](https://github.com/dsanel/mongoose-delete/pull/149)
+- Setup GitHub action for tests
+    - OS: `[ubuntu-22.04, ubuntu-24.04]`
+    - Node: `[16, 18, 20, 22, 24]`
+    - MongoDB: `['6.0', '7.0', '8.0']`
+
+## [v1.0.3]
+> November 5, 2025
+- Update `devDependencies`: `chai`, `mocha`, `nyc`
+- Mongoose 7+ Callback Fix ([tomLadder](https://github.com/tomLadder)) [#163](https://github.com/dsanel/mongoose-delete/pull/163)
+- Setup GitHub action for tests
+    - OS: `[ubuntu-22.04, ubuntu-24.04]`
+    - Node: `[16, 18, 20, 22, 24]`
+    - MongoDB: `['6.0.15', '7.0.12', '8.2.0']`
+
 ## [v1.0.2]
 > February 5, 2024
 - Update `devDependencies` to `"mongoose": "^8.1.1"`

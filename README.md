@@ -20,7 +20,8 @@ mongoose-delete is simple and lightweight plugin that enables soft deletion of d
   - [Option to create index on delete fields](#create-index-on-fields) (__deleted__, __deletedAt__, __deletedBy__)
   - Option to disable use of `$ne` operator using `{use$neOperator: false}`. Before you start to use this option please check [#50](https://github.com/dsanel/mongoose-delete/issues/50).
   - Option to override **aggregate**.
-  - Option to **populate** with deleted documents (`{ withDeleted: true }`)
+  - Option to `populate` with deleted documents (`{ withDeleted: true }`)
+  - Option to `populate` **ONLY** deleted documents (`{ onlyDeleted: true }`)
 
 ## Installation
 Install using [npm](https://npmjs.org)
@@ -243,7 +244,7 @@ We have the option to override all standard methods or only specific methods. Ov
 | aggregate()                | aggregateDeleted                   | aggregateWithDeleted                   |
 | findById()                 | Please use findOne                 | Please use findOneWithDeleted          |
 | findByIdAndUpdate()        | Please use findOneAndUpdateDeleted | Please use findOneAndUpdateWithDeleted |
-
+| distinct()                 | distinctDeleted                    | distinctWithDeleted                    |
 
 ### Examples how to override one or multiple methods
 

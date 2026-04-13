@@ -83,6 +83,12 @@ module.exports = function (schema, options) {
     var mainUpdateMethod = mongooseMajorVersion < 5 ? 'update' : 'updateMany';
     var mainUpdateWithDeletedMethod = mainUpdateMethod + 'WithDeleted';
 
+    function adjustCallbackForMongooseVersion(callback) {
+        // Since Mongoose 7, callback support has been fully removed in favor of Promises and async/await.
+        // See: https://mongoosejs.com/docs/migrating_to_7.html#dropped-callback-support
+        return mongooseMajorVersion >= 7 ? undefined : callback;
+    }
+
     function updateDocumentsByQuery(schema, conditions, updateQuery, callback) {
         if (schema[mainUpdateWithDeletedMethod]) {
             return schema[mainUpdateWithDeletedMethod](conditions, updateQuery, { multi: true }, callback);
@@ -117,7 +123,7 @@ module.exports = function (schema, options) {
 
     if (options.overrideMethods) {
         var overrideItems = options.overrideMethods;
-        var overridableMethods = ['countDocuments', 'find', 'findOne', 'findOneAndUpdate', 'update', 'updateOne', 'updateMany', 'aggregate'];
+        var overridableMethods = ['count', 'countDocuments', 'find', 'findOne', 'findOneAndUpdate', 'update', 'updateOne', 'updateMany', 'aggregate', 'distinct'];
         var finalList = [];
 
         if ((typeof overrideItems === 'string' || overrideItems instanceof String) && overrideItems === 'all') {
@@ -140,22 +146,35 @@ module.exports = function (schema, options) {
             schema.pre('aggregate', function() {
                 var firstMatch = this.pipeline()[0];
 
-                if(firstMatch.$match?.deleted?.$ne !== false){
-                    if(firstMatch.$match?.showAllDocuments === 'true'){
-                        var {showAllDocuments, ...replacement} = firstMatch.$match;
-                        this.pipeline().shift();
-                        if(Object.keys(replacement).length > 0){
-                            this.pipeline().unshift({ $match: replacement });
-                        }
-                    }else{
-                        this.pipeline().unshift({ $match: { deleted: { '$ne': true } } });
+                var hasDeletedMatchStage = typeof firstMatch.$match?.deleted !== 'undefined'
+                var shouldShowAllDocuments = firstMatch.$match?.showAllDocuments === true
+
+                if (hasDeletedMatchStage || shouldShowAllDocuments) {
+                    var { showAllDocuments, ...replacement } = firstMatch.$match;
+                    this.pipeline().shift();
+                    if (Object.keys(replacement).length > 0) {
+                        this.pipeline().unshift({
+                            $match: replacement
+                        });
                     }
+                } else if (!hasDeletedMatchStage && use$neOperator) {
+                    this.pipeline().unshift({
+                        $match: {
+                            deleted: { '$ne': true }
+                        }
+                    });
+                } else if (!hasDeletedMatchStage && !use$neOperator) {
+                    this.pipeline().unshift({
+                        $match: {
+                            deleted: false
+                        }
+                    });
                 }
             });
         }
 
         finalList.forEach(function(method) {
-            if (['countDocuments', 'find', 'findOne'].indexOf(method) > -1) {
+            if (['count', 'countDocuments', 'find', 'findOne', 'distinct'].indexOf(method) > -1) {
                 var modelMethodName = method;
 
                 schema.statics[method] = function () {
@@ -165,6 +184,14 @@ module.exports = function (schema, options) {
                             query.where('deleted').ne(true);
                         } else {
                             query.where({deleted: false});
+                        }
+                    }
+
+                    if (arguments[2] && arguments[2].onlyDeleted === true) {
+                        if (use$neOperator) {
+                            query.where('deleted').ne(false);
+                        } else {
+                            query.where({deleted: true});
                         }
                     }
                     return query;
@@ -192,7 +219,7 @@ module.exports = function (schema, options) {
                     schema.statics[method + 'WithDeleted'] = function () {
                         var args = [];
                         Array.prototype.push.apply(args, arguments);
-                        var match = { $match : { showAllDocuments : 'true' } };
+                        var match = { $match : { showAllDocuments : true } };
                         arguments.length ? args[0].unshift(match) : args.push([match]);
                         return Model[method].apply(this, args);
                     };
@@ -229,11 +256,13 @@ module.exports = function (schema, options) {
         });
     }
 
-    schema.methods.delete = function (deletedBy, cb) {
+    schema.methods.delete = function (deletedBy, callback) {
         if (typeof deletedBy === 'function') {
-          cb = deletedBy;
+          callback = deletedBy;
           deletedBy = null;
         }
+
+        callback = adjustCallbackForMongooseVersion(callback);
 
         this.deleted = true;
 
@@ -246,10 +275,10 @@ module.exports = function (schema, options) {
         }
 
         if (options.validateBeforeDelete === false) {
-            return this.save({ validateBeforeSave: false }, cb);
+            return this.save({ validateBeforeSave: false }, callback);
         }
 
-        return this.save(cb);
+        return this.save(callback);
     };
 
     schema.statics.delete =  function (conditions, deletedBy, callback) {
@@ -262,6 +291,8 @@ module.exports = function (schema, options) {
             conditions = {};
             deletedBy = null;
         }
+
+        callback = adjustCallbackForMongooseVersion(callback);
 
         var doc = {
             deleted: true
@@ -284,6 +315,8 @@ module.exports = function (schema, options) {
             throw new TypeError(msg);
         }
 
+        callback = adjustCallbackForMongooseVersion(callback);
+
         var conditions = {
             _id: id
         };
@@ -295,6 +328,8 @@ module.exports = function (schema, options) {
         this.deleted = false;
         this.deletedAt = undefined;
         this.deletedBy = undefined;
+
+        callback = adjustCallbackForMongooseVersion(callback);
 
         if (options.validateBeforeRestore === false) {
             return this.save({ validateBeforeSave: false }, callback);
@@ -309,9 +344,13 @@ module.exports = function (schema, options) {
             conditions = {};
         }
 
+        callback = adjustCallbackForMongooseVersion(callback);
+
         var doc = {
+            $set:{
+                deleted: false
+            },
             $unset:{
-                deleted: true,
                 deletedAt: true,
                 deletedBy: true
             }
